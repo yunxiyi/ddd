@@ -116,6 +116,8 @@ BoundedContext InteractionContext {
 
         Aggregate Reply {
             Entity Reply {
+                aggregateRoot
+                
                 ReplyId replyId
                 ReplyText text
                 - Comment comment
@@ -124,6 +126,16 @@ BoundedContext InteractionContext {
                 int diggCount 
                 bool hasDigged
                 - UserInfo user
+
+                Repository ReplyRepository {
+                    int CreateReply(@Reply reply);
+                    int DeleteReply(@Reply reply);
+                    int ModifyReply(@Reply reply);
+
+                    int CreateSubReply(@SubReply reply);
+                    int DeleteSubReply(@SubReply reply);
+                    int ModifySubReply(@SubReply reply);
+                }
             }
 
             Entity SubReply {
@@ -136,10 +148,6 @@ BoundedContext InteractionContext {
             }
 
             Service ReplyService {
-                int CreateReply(@Reply reply);
-                int DeleteReply(@Reply reply);
-                int ModifyReply(@Reply reply);
-
                 list<@Reply> getReplyByCommentID(int commentID);
                 list<@Reply> getReplyByReplyIDs(list replyIDs);
             }
@@ -157,6 +165,20 @@ BoundedContext InteractionContext {
                 bool hasDigged
                 ServiceId serviceId
                 - UserInfo user
+
+                Repository CommentRepository {
+                    int CreateComment(@Comment comment);
+                    int DeleteComment(@Comment comment);
+                    int ModifyComment(@Comment comment);
+
+                    int CreateReply(@Reply reply);
+                    int DeleteReply(@Reply reply);
+                    int ModifyReply(@Reply reply);
+
+                    int CreateSubReply(@SubReply reply);
+                    int DeleteSubReply(@SubReply reply);
+                    int ModifySubReply(@SubReply reply);
+                }
             }
 
             Entity UserInfo {
@@ -174,10 +196,6 @@ BoundedContext InteractionContext {
 
 
             Service CommentService {
-                int CreateComment(@Comment comment);
-                int DeleteComment(@Comment comment);
-                int ModifyComment(@Comment comment);
-
                 list<@Comment> getCommentsByPosID(@GroupID groupId);
                 list<@Comment> getCommentsByCommentIDs(list commentIDs);
                 list<@Comment> getUserCommentsByUserID(int userID);
