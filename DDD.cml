@@ -1,0 +1,240 @@
+ContextMap DDDUGCMap {
+    contains InteractionContext
+    contains UserContentContext
+    contains MessageContext
+    contains UserContext
+    contains DistributeContext
+
+    // 内容域与分发域之间的关系：共享内核
+    UserContentContext [SK]<->[SK] DistributeContext
+
+    InteractionContext [D, ACL] <- [U,OHS,PL] UserContentContext 
+
+    InteractionContext [D, ACL] <- [U,OHS,PL] MessageContext
+
+    MessageContext [D, ACL] <- [U,OHS,PL] InteractionContext
+
+    InteractionContext [D, ACL] <- [U,OHS,PL] UserContext
+
+    UserContentContext [D, ACL] <- [U,OHS,PL]  UserContext
+
+}
+
+BoundedContext UserContentContext {
+
+    Module UgcContent {
+         basePackage = ugc.domain.model.content
+
+         Aggregate UcgContent {
+             Entity UgcContent {
+                aggregateRoot
+
+                 ContentId contentId
+                 - ContentType contentType
+                 - User user
+                 - Content content
+                 - Stat stat
+
+                  Repository UgcContentRepository {
+                    @UgcContent getByID(ContentId contentId);
+                    ContentId SaveContent(@Content content);
+                    @Stat SaveStat(@Stat stat, ContentId contentId);
+                }
+             }
+
+             Entity Content {
+                ContentId contentId
+                String title
+                String content
+                - Status status
+             }
+
+             enum Status {
+                 Unpass, Pass, Deleted
+             }
+
+             enum ContentType {
+                 Topic, Post
+             }
+
+             ValueObject Stat {
+                 int commentCount
+                 int diggCount
+                 int followCount
+             }
+
+            Service UgcContentService {
+                @UgcContent find(ContentId contentId, @ContentType contentType);
+            }
+         }
+    }
+}
+
+BoundedContext DistributeContext {
+    Module UgcDistribute {
+         basePackage = ugc.domain.model.distribute
+
+         Aggregate UcgDistribute {
+             Entity UgcDistributePos {
+                aggregateRoot
+                - PosID posId
+                - ContentID contentId
+                - DistributeStatus status
+
+                Repository DistributeRepository {
+                    list<@ContentID> getByPosID(@PosID posId);
+                    int modifyContentDistributePos(@UgcDistributePos ugcDistribute);
+                    list<@UgcDistributePos> getUgcDistributePosByContentID(@ContentID contentID);
+                }
+             }
+
+             ValueObject PosID {
+                 PosId posId
+                 - PosType posType
+             }
+
+             ValueObject ContentID {
+                ContentId contentId
+                - ContentType contentType
+             }
+
+             enum PosType {
+                 Book, Bookstore
+             }
+             
+             enum DistributeStatus {
+                Ing, Stop
+             }             
+         }
+    }
+}
+
+
+BoundedContext InteractionContext {
+    Module Interaction {
+        basePackage = ugc.domain.model.interaction
+
+        Aggregate Reply {
+            Entity Reply {
+                ReplyId replyId
+                ReplyText text
+                - Comment comment
+                - List<SubReply> replies
+                int replyCnt
+                int diggCount 
+                bool hasDigged
+                - UserInfo user
+            }
+
+            Entity SubReply {
+                SubReplyId subReplyId
+                SubReplyText text
+                - Reply reply
+                int diggCount 
+                bool hasDigged
+                - UserInfo user
+            }
+
+            Service ReplyService {
+                int CreateReply(@Reply reply);
+                int DeleteReply(@Reply reply);
+                int ModifyReply(@Reply reply);
+
+                list<@Reply> getReplyByCommentID(int commentID);
+                list<@Reply> getReplyByReplyIDs(list replyIDs);
+            }
+        }
+
+        Aggregate Comment {
+            Entity Comment {
+                aggregateRoot
+                CommentId commentId
+                CommentText text
+                - GroupID groupId
+                - List<Reply> replies
+                int replyCnt
+                int diggCount 
+                bool hasDigged
+                ServiceId serviceId
+                - UserInfo user
+            }
+
+            Entity UserInfo {
+                UserID userId 
+                String username 
+                String avatar
+                List<String> titles
+            }
+
+            ValueObject GroupID {
+                ContentId contentId
+                ServiceId serviceId
+                Status status
+            }
+
+
+            Service CommentService {
+                int CreateComment(@Comment comment);
+                int DeleteComment(@Comment comment);
+                int ModifyComment(@Comment comment);
+
+                list<@Comment> getCommentsByPosID(@GroupID groupId);
+                list<@Comment> getCommentsByCommentIDs(list commentIDs);
+                list<@Comment> getUserCommentsByUserID(int userID);
+            }
+        }
+    }
+}
+
+
+BoundedContext MessageContext {
+    Module UgcMessage {
+        basePackage = ugc.domain.model.message
+
+        Aggregate DiggMessage {
+            
+            Entity DiggMessage {
+                aggregateRoot
+
+            }
+
+        }
+
+        Aggregate ReplyMessage {
+            Entity ReplyMessage {
+                aggregateRoot
+            }
+        }
+    }
+
+}
+
+BoundedContext UserContext {
+    Module user {
+        basePackage = ugc.domain.model.user
+
+        Aggregate UserProfile {
+            Entity User {
+                aggregateRoot
+
+                UserID userId
+                - Username username
+                - Avatar avatar
+                - List<Title> titles
+
+            }
+
+            ValueObject Username {
+                String val
+            }
+
+            ValueObject Avatar {
+                String val
+            }
+
+            ValueObject Title {
+                String val
+            }
+        }
+    }
+}
